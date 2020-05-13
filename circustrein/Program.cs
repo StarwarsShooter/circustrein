@@ -1,121 +1,126 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Linq.Expressions;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace circustrein
 {
-    class Program
+    [Serializable]
+    internal static class Program
     {
-        static string eter;
+        private static string _food;
 
-        static int formaat;
+        private static int _size;
 
-        private static int totaal;
+        private static int _total;
 
-        private static int totaalAnimals = 0;
+        private static int _totaalAnimals = 0;
 
-        static List<animal> animals = new List<animal>();
+        private static List<Animal> _animals = new List<Animal>();
 
-        static List<animal> meat = new List<animal>();
+        private static List<Animal> _carnivores = new List<Animal>();
 
-        static List<animal> plant = new List<animal>();
+        private static List<Animal> _herbivores = new List<Animal>();
 
-        static List<animal> leftover = new List<animal>();
+        private static List<Animal> _leftovers = new List<Animal>();
 
-        static List<Wagon> wagons = new List<Wagon>();
+        private static List<Wagon> _wagons = new List<Wagon>();
 
         public static void Main(string[] args)
         {
             Console.WriteLine("Hoeveel dieren wilt u vervoeren?");
             string maxed = Console.ReadLine();
-            totaal = Convert.ToInt32(maxed);
+            _total = Convert.ToInt32(maxed);
 
             Console.WriteLine("Is het een vleeseter (v) of planteneter (p)?");
-            eter = Console.ReadLine();
+            _food = Console.ReadLine();
             Console.WriteLine("Is het een klein dier (1) een middelgroot dier (3) of een groot dier (5)?");
             string grootte = Console.ReadLine();
-            formaat = Convert.ToInt32(grootte);
+            _size = Convert.ToInt32(grootte);
 
             bool check = CheckText();
 
             if (check)
             {
-                animal animal = new animal(eter, formaat);
-                animals.Add(animal);
-                totaalAnimals = totaalAnimals + 1;
-                while (totaalAnimals < totaal)
+                Animal animal = new Animal(_food, _size);
+                _animals.Add(animal);
+                _totaalAnimals = _totaalAnimals + 1;
+                while (_totaalAnimals < _total)
                 {
                     AddAnimal();
-                    totaalAnimals++;
+                    _totaalAnimals++;
                 }
                 FoodCheck();
                 CreateWagon();
                 LeftoverFill();
-                Console.WriteLine(wagons.Count.ToString());
+                Console.WriteLine("Wagons: " + _wagons.Count.ToString());
             }
             else
             {
                 
-                while (totaalAnimals < totaal)
+                while (_totaalAnimals < _total)
                 {
                     AddAnimal();
-                    totaalAnimals++;
+                    _totaalAnimals++;
                 }
                 FoodCheck();
                 CreateWagon();
                 LeftoverFill();
+                Console.WriteLine("Wagons: " + _wagons.Count.ToString());
             }
             
         }
 
         public static void FoodCheck()
         {
-            for (int i = 0; i < animals.Count; i++)
+            for (int i = 0; i < _animals.Count; i++)
             {
-                animal[] animals = Program.animals.ToArray();
+                Animal[] animals = Program._animals.ToArray();
                 if (animals[i].AnimalFood == "v")
                 {
-                    meat.Add(animals[i]);
+                    _carnivores.Add(animals[i]);
                 }
                 else
                 {
-                    plant.Add(animals[i]);
+                    _herbivores.Add(animals[i]);
                 }
             }
-            SortAnimal(meat);
-            SortAnimal(plant);
+            SortAnimal(_carnivores);
+            SortAnimal(_herbivores);
         }
 
-        public static void SortAnimal(List<animal> Food)
+        public static void SortAnimal(List<Animal> food)
         {
-            Food = Food.OrderByDescending(x => x.AnimalSize)
+            food = food.OrderByDescending(x => x.AnimalSize)
                 .ToList();
         }
 
         public static void CreateWagon()
         {
-            animal[] meatAnimalses = meat.ToArray();
+            Animal[] meatAnimalses = _carnivores.ToArray();
+            List<Animal> clonedHerbivores = new List<Animal>(_herbivores);
             for (int i = 0; i < meatAnimalses.Length; i++)
             {
                 if (meatAnimalses[i].AnimalSize == 5)
                 {
                     Wagon wagon = new Wagon(meatAnimalses[i]);
-                    wagons.Add(wagon);
+                    _wagons.Add(wagon);
                 }
                 else if (meatAnimalses[i].AnimalSize == 3)
                 {
                     Wagon wagon = new Wagon(meatAnimalses[i]);
-                    wagons.Add(wagon);
+                    _wagons.Add(wagon);
 
-                    for (int j = 0; j < plant.Count; j++)
+                    for (int j = 0; j < _herbivores.Count; j++)
                     {
-                        if (plant[j].AnimalSize == 5)
+                        if (_herbivores[j].AnimalSize == 5)
                         {
-                            var animalFill = plant[j];
-                            wagon.AddAnimal(animalFill);
-                            plant[j].AnimalSize = 0;
+                            wagon.AddAnimal(clonedHerbivores[j]);
+                            _herbivores[j].AnimalSize = 0;
                             break;
                         }
                     }
@@ -123,16 +128,15 @@ namespace circustrein
                 else if (meatAnimalses[i].AnimalSize == 1)
                 {
                     Wagon wagon = new Wagon(meatAnimalses[i]);
-                    wagons.Add(wagon);
+                    _wagons.Add(wagon);
                     int count = 0;
 
-                    for (int j = 0; j < plant[j].AnimalSize; j++)
+                    for (int j = 0; j < _herbivores.Count; j++)
                     {
-                        if (plant[j].AnimalSize == 3)
+                        if (_herbivores[j].AnimalSize == 3)
                         {
-                            var animalFill = plant[j];
-                            wagon.AddAnimal(animalFill);
-                            plant[j].AnimalSize = 0;
+                            wagon.AddAnimal(clonedHerbivores[j]);
+                            _herbivores[j].AnimalSize = 0;
 
                             count++;
                             if (count == 3)
@@ -144,13 +148,12 @@ namespace circustrein
                     int check = wagon.CheckIfFilled();
                     if (check < 5)
                     {
-                        for (int j = 0; j < plant[j].AnimalSize; j++)
+                        for (int j = 0; j < _herbivores.Count; j++)
                         {
-                            if (plant[j].AnimalSize == 5)
+                            if (_herbivores[j].AnimalSize == 5)
                             {
-                                var animalFill = plant[j];
-                                wagon.AddAnimal(animalFill);
-                                plant[j].AnimalSize = 0;
+                                wagon.AddAnimal(clonedHerbivores[j]);
+                                _herbivores[j].AnimalSize = 0;
                                 break;
                             }
                         }
@@ -161,28 +164,49 @@ namespace circustrein
 
         public static void LeftoverFill()
         {
-            for (int i = 0; i < plant[i].AnimalSize; i++)
+            for (int i = 0; i < _herbivores.Count; i++)
             {
-                if (plant[i].AnimalSize != 0)
+                if (_herbivores[i].AnimalSize != 0)
                 {
-                    leftover.Add(plant[i]);
+                    _leftovers.Add(_herbivores[i]);
                 }
             }
 
-            if (leftover.Count > 0)
+            if (_leftovers.Count > 0)
             {
-                for (int i = 0; i < leftover[i].AnimalSize; i++)
+                var clonedLeftovers = _leftovers.DeepClone();
+
+                Wagon wagon = new Wagon(clonedLeftovers[0]);
+                _wagons.Add(wagon);
+                _leftovers[0].AnimalSize = 0;
+                int check = wagon.CheckIfFilled();
+                if (check < 10)
                 {
-                    Wagon wagon = new Wagon(leftover[0]);
-                    wagons.Add(wagon);
-                    int check = wagon.CheckIfFilled();
-                    if (check < 10)
+                    for (int i = 1; i < _leftovers.Count; i++)
                     {
-                        if (leftover[i].AnimalSize + check < 10)
+                        if (_leftovers[i].AnimalSize + check <= 10)
                         {
-                            var filler = leftover[i];
-                            wagon.AddAnimal(filler);
-                            leftover[i].AnimalSize = 0;
+                            wagon.AddAnimal(clonedLeftovers[i]);
+                            _leftovers[i].AnimalSize = 0;
+                            check = check + clonedLeftovers[i].AnimalSize;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < _leftovers.Count; i++)
+                {
+                    if (_leftovers[i].AnimalSize != 0)
+                    {
+                        Wagon wagon2 = new Wagon(clonedLeftovers[i]);
+                        _wagons.Add(wagon2);
+                        _leftovers[i].AnimalSize = 0;
+                        for (int j = 0; j < _leftovers.Count; j++)
+                        {
+                            if (_leftovers[j].AnimalSize + check <= 10)
+                            {
+                                wagon.AddAnimal(clonedLeftovers[i]);
+                                _leftovers[j].AnimalSize = 0;
+                            }
                         }
                     }
                 }
@@ -193,15 +217,13 @@ namespace circustrein
         {
             bool check;
 
-            if (eter == "v" || eter == "p")
+            if (_food == "v" || _food == "p")
             {
-                //Console.WriteLine("Dit is geen optie");
                 check = true;
             }
 
-            else if (formaat == 1 || formaat == 3 || formaat == 5)
+            else if (_size == 1 || _size == 3 || _size == 5)
             {
-                //Console.WriteLine("Dit is geen optie");
                 check = true;
             }
 
@@ -217,21 +239,34 @@ namespace circustrein
         public static void AddAnimal()
         {
             Console.WriteLine("Is het een vleeseter (v) of planteneter (p)?");
-            eter = Console.ReadLine();
+            _food = Console.ReadLine();
             Console.WriteLine("Is het een klein dier (1) een middelgroot dier (3) of een groot dier (5)?");
             string grootte = Console.ReadLine();
-            formaat = Convert.ToInt32(grootte);
+            _size = Convert.ToInt32(grootte);
 
             bool check = CheckText();
 
             if (check)
             {
-                animal animal = new animal(eter, formaat);
-                animals.Add(animal);
+                Animal animal = new Animal(_food, _size);
+                _animals.Add(animal);
             }
             else
             {
                 AddAnimal();
+            }
+        }
+        public static T DeepClone<T>(this T obj)
+        {
+            using (MemoryStream memory_stream = new MemoryStream())
+            {
+                // Serialize the object into the memory stream.
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(memory_stream, obj);
+
+                // Rewind the stream and use it to create a new object.
+                memory_stream.Position = 0;
+                return (T)formatter.Deserialize(memory_stream);
             }
         }
     }

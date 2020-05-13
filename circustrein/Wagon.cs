@@ -4,36 +4,39 @@ using System.Text;
 
 namespace circustrein
 {
-    class Wagon
+    [Serializable]
+
+    internal class Wagon
     {
-        private int max = 10;
+        private int _max = 10;
 
-        private int filling = 0;
+        private int _filling = 0;
 
-        private List<animal> wagonAnimals = new List<animal>();
-        public List<animal> wagonList
+        private readonly List<Animal> _wagonAnimals = new List<Animal>();
+        public List<Animal> WagonList
         {
-            get { return wagonAnimals; }
+            get { return _wagonAnimals; }
         }
 
-        public Wagon(animal animal)
+        public Wagon(Animal animal)
         {
-            wagonAnimals.Add(animal);
+            _wagonAnimals.Add(animal);
         }
 
-        public void AddAnimal(animal plantAnimal)
+        public void AddAnimal(Animal plantAnimal)
         {
-            wagonAnimals.Add(plantAnimal);
+            _wagonAnimals.Add(plantAnimal);
         }
 
         public int CheckIfFilled()
         {
-            animal[] wagonArray = wagonAnimals.ToArray();
+            Animal[] wagonArray = _wagonAnimals.ToArray();
+            _filling = 0;
             for (int i = 0; i < wagonArray.Length; i++)
             {
-                filling = filling + wagonArray[i].AnimalSize;
+                _filling = _filling + wagonArray[i].AnimalSize;
             }
-            return filling;
+            return _filling;
         }
     }
 }
