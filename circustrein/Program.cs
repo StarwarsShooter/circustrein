@@ -18,7 +18,7 @@ namespace circustrein
 
         private static int _total;
 
-        private static int _totaalAnimals = 0;
+        private static int _totalAnimals = 0;
 
         private static List<Animal> _animals = new List<Animal>();
 
@@ -36,41 +36,37 @@ namespace circustrein
             string maxed = Console.ReadLine();
             _total = Convert.ToInt32(maxed);
 
-            Console.WriteLine("Is het een vleeseter (v) of planteneter (p)?");
-            _food = Console.ReadLine();
-            Console.WriteLine("Is het een klein dier (1) een middelgroot dier (3) of een groot dier (5)?");
-            string grootte = Console.ReadLine();
-            _size = Convert.ToInt32(grootte);
+            AddAnimal();
 
             bool check = CheckText();
 
             if (check)
             {
-                Animal animal = new Animal(_food, _size);
-                _animals.Add(animal);
-                _totaalAnimals = _totaalAnimals + 1;
-                while (_totaalAnimals < _total)
+                _totalAnimals = _totalAnimals + 1;
+                while (_totalAnimals < _total)
                 {
                     AddAnimal();
-                    _totaalAnimals++;
+                    _totalAnimals++;
                 }
                 FoodCheck();
                 CreateWagon();
                 LeftoverFill();
                 Console.WriteLine("Wagons: " + _wagons.Count.ToString());
+                ShowWagons();
             }
             else
             {
                 
-                while (_totaalAnimals < _total)
+                while (_totalAnimals < _total)
                 {
                     AddAnimal();
-                    _totaalAnimals++;
+                    _totalAnimals++;
                 }
                 FoodCheck();
                 CreateWagon();
                 LeftoverFill();
                 Console.WriteLine("Wagons: " + _wagons.Count.ToString());
+                ShowWagons();
             }
             
         }
@@ -102,7 +98,7 @@ namespace circustrein
         public static void CreateWagon()
         {
             Animal[] meatAnimalses = _carnivores.ToArray();
-            List<Animal> clonedHerbivores = new List<Animal>(_herbivores);
+            var clonedHerbivores = _herbivores.DeepClone();
             for (int i = 0; i < meatAnimalses.Length; i++)
             {
                 if (meatAnimalses[i].AnimalSize == 5)
@@ -200,9 +196,10 @@ namespace circustrein
                         Wagon wagon2 = new Wagon(clonedLeftovers[i]);
                         _wagons.Add(wagon2);
                         _leftovers[i].AnimalSize = 0;
+                        int check2 = wagon2.CheckIfFilled();
                         for (int j = 0; j < _leftovers.Count; j++)
                         {
-                            if (_leftovers[j].AnimalSize + check <= 10)
+                            if (_leftovers[j].AnimalSize + check2 <= 10 && _leftovers[j].AnimalSize != 0)
                             {
                                 wagon.AddAnimal(clonedLeftovers[i]);
                                 _leftovers[j].AnimalSize = 0;
@@ -217,19 +214,14 @@ namespace circustrein
         {
             bool check;
 
-            if (_food == "v" || _food == "p")
-            {
-                check = true;
-            }
-
-            else if (_size == 1 || _size == 3 || _size == 5)
+            if (((_food == "v") || (_food == "p")) && ((_size == 1) || (_size == 3) || (_size == 5)))
             {
                 check = true;
             }
 
             else
             {
-                Console.WriteLine("Dit is geen optie");
+                Console.WriteLine("Dit is geen geldige invoer");
                 check = false;
             }
 
@@ -238,6 +230,7 @@ namespace circustrein
 
         public static void AddAnimal()
         {
+            Console.WriteLine("Dier " + (_totalAnimals+1) + "/" + _total);
             Console.WriteLine("Is het een vleeseter (v) of planteneter (p)?");
             _food = Console.ReadLine();
             Console.WriteLine("Is het een klein dier (1) een middelgroot dier (3) of een groot dier (5)?");
@@ -267,6 +260,22 @@ namespace circustrein
                 // Rewind the stream and use it to create a new object.
                 memory_stream.Position = 0;
                 return (T)formatter.Deserialize(memory_stream);
+            }
+        }
+
+        public static void ShowWagons()
+        {
+            for (int i = 0; i < _wagons.Count; i++)
+            {
+                List<Animal> inWagon = _wagons[i].WagonList;
+                Console.WriteLine("Wagon: " + (i+1) + "/" + _wagons.Count);
+                for (int j = 0; j < inWagon.Count; j++)
+                {
+                    Console.WriteLine("Dier: " + (j+1) + "/" + inWagon.Count);
+                    Console.WriteLine("Hetgeen wat het dier eet: " + inWagon[j].AnimalFood);
+                    Console.WriteLine("Het formaat van het dier: " + inWagon[j].AnimalSize.ToString());
+                    Console.WriteLine("");
+                }
             }
         }
     }

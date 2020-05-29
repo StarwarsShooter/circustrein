@@ -8,8 +8,6 @@ namespace circustrein
 
     internal class Wagon
     {
-        private int _max = 10;
-
         private int _filling = 0;
 
         private readonly List<Animal> _wagonAnimals = new List<Animal>();
@@ -30,11 +28,10 @@ namespace circustrein
 
         public int CheckIfFilled()
         {
-            Animal[] wagonArray = _wagonAnimals.ToArray();
             _filling = 0;
-            for (int i = 0; i < wagonArray.Length; i++)
+            for (int i = 0; i < _wagonAnimals.Count; i++)
             {
-                _filling = _filling + wagonArray[i].AnimalSize;
+                _filling = _filling + _wagonAnimals[i].AnimalSize;
             }
             return _filling;
         }
